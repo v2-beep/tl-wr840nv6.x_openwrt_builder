@@ -7,22 +7,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone and Compile OpenWrt inside Ubuntu 20.04
+      - name: Clone v6 Source and Compile
         run: |
           docker run --rm -v ${{ github.workspace }}:/build ubuntu:20.04 bash -c "
             set -e
+            export DEBIAN_FRONTEND=noninteractive
+            export FORCE_UNSAFE_CONFIGURE=1
             apt-get update
-            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python2 python3 file ccache swig
+            apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python2 python3 file ccache swig
             cd /build
-            git clone --depth 1 -b openwrt-19.07 https://github.com/openwrt/openwrt.git source
+            git clone --depth 1 https://github.com/IcedShake/openwrt-19.07-tl-wr840n-v6.x.git source
             cd source
             ./scripts/feeds update -a
             ./scripts/feeds install -a
             echo 'CONFIG_TARGET_ramips=y' > .config
             echo 'CONFIG_TARGET_ramips_mt76x8=y' >> .config
-            echo 'CONFIG_TARGET_ramips_mt76x8_DEVICE_tplink_tl-wr840n-v5=y' >> .config
+            echo 'CONFIG_TARGET_ramips_mt76x8_DEVICE_tplink_tl-wr840n-v6=y' >> .config
             make defconfig
-            make -j\$(nproc)
+            make -j\$(nproc) FORCE_UNSAFE_CONFIGURE=1
           "
 
       - name: Upload Binaries
