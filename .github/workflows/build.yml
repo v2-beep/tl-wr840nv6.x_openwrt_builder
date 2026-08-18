@@ -1,0 +1,34 @@
+name: Build OpenWrt v6.x
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Builder Repo
+        uses: actions/checkout@v3
+
+      - name: Clone OpenWrt Source
+        run: |
+          git clone --depth 1 https://github.com/IcedShake/openwrt-19.07-tl-wr840n-v6.x.git openwrt
+
+      - name: Setup Build Tools & Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python3
+
+      - name: Update Feeds and Build
+        run: |
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          make defconfig
+          make -j$(nproc) || make -j1 V=s
+
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: openwrt-wr840n-v6-firmware
+          path: openwrt/bin/targets/ramips/mt76x8/*.bin
