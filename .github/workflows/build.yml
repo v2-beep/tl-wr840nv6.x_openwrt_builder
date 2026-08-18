@@ -20,7 +20,9 @@ jobs:
       - name: Build Firmware Image
         run: |
           cd openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64
-          make image PROFILE=tplink_tl-wr840n-v5 PACKAGES="-luci -kmod-usb-core -kmod-usb2"
+          PROFILE_NAME=$(make info | grep -i "tl-wr840n" | head -n 1 | cut -d':' -f1)
+          if [ -z "$PROFILE_NAME" ]; then PROFILE_NAME="tl-wr840n-v5"; fi
+          make image PROFILE="$PROFILE_NAME" PACKAGES="-luci -kmod-usb-core -kmod-usb2"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v4
