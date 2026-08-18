@@ -7,23 +7,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Build Firmware inside Ubuntu 20.04 Container
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Compile v6.x Firmware inside Ubuntu 20.04
         run: |
           docker run --rm -v ${{ github.workspace }}:/build ubuntu:20.04 bash -c "
             set -e
             apt-get update
-            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python2 python3 file
+            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python2 python3 file ccache swig
             cd /build
-            wget -q https://archive.openwrt.org/releases/19.07.10/targets/ramips/mt76x8/openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64.tar.xz
-            tar -xf openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64.tar.xz
-            cd openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64
-            PROFILE_NAME=\$(make info | grep -i 'tl-wr840n' | head -n 1 | cut -d':' -f1 | tr -d ' ')
-            echo 'Building profile: '\$PROFILE_NAME
-            make image PROFILE=\"\$PROFILE_NAME\" PACKAGES=\"-luci -kmod-usb-core -kmod-usb2\"
+            ./scripts/feeds update -a
+            ./scripts/feeds install -a
+            make defconfig
+            make -j\$(nproc)
           "
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v4
         with:
           name: openwrt-wr840n-v6-firmware
-          path: openwrt-imagebuilder-*/bin/targets/ramips/mt76x8/*.bin
+          path: bin/targets/ramips/mt76x8/*.bin
