@@ -5,30 +5,20 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout Builder Repo
-        uses: actions/checkout@v3
-
-      - name: Clone OpenWrt Source
+      - name: Download and Extract ImageBuilder
         run: |
-          git clone --depth 1 https://github.com/IcedShake/openwrt-19.07-tl-wr840n-v6.x.git openwrt
-
-      - name: Setup Build Tools & Dependencies
+          wget https://archive.openwrt.org/releases/19.07.10/targets/ramips/mt76x8/openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64.tar.xz
+          tar -xf openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64.tar.xz
+          
+      - name: Build Firmware Image
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python3
-
-      - name: Update Feeds and Build
-        run: |
-          cd openwrt
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-          make defconfig
-          make -j$(nproc) || make -j1 V=s
+          cd openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64
+          make image PROFILE=tplink_tl-wr840n-v4 PACKAGES="-luci -kmod-usb-core -kmod-usb2"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v4
         with:
           name: openwrt-wr840n-v6-firmware
-          path: openwrt/bin/targets/ramips/mt76x8/*.bin
+          path: openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64/bin/targets/ramips/mt76x8/*.bin
