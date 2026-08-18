@@ -7,15 +7,20 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python3 python3-distutils file
+
       - name: Download and Extract ImageBuilder
         run: |
           wget https://archive.openwrt.org/releases/19.07.10/targets/ramips/mt76x8/openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64.tar.xz
           tar -xf openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64.tar.xz
-          
+
       - name: Build Firmware Image
         run: |
           cd openwrt-imagebuilder-19.07.10-ramips-mt76x8.Linux-x86_64
-          make image PROFILE=tplink_tl-wr840n-v4 PACKAGES="-luci -kmod-usb-core -kmod-usb2"
+          make image PROFILE=tplink_tl-wr840n-v5 PACKAGES="-luci -kmod-usb-core -kmod-usb2"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v4
